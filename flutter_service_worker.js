@@ -3,11 +3,12 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
-  "assets/AssetManifest.json": "bfb425e82e33dbdbeb6e5b96940c1948",
+  "assets/AssetManifest.json": "4913f2e3c4e337b69c4bcf92f6ee84fb",
+"assets/assets/images/profile_pic.jpg": "1df31683a053e2fc9ee55626bfaeefef",
 "assets/assets/images/video_image.jpg": "6b2b7b693cfe9fa981c7880e3e449c72",
 "assets/FontManifest.json": "5a32d4310a6f5d9a6b651e75ba0d7372",
 "assets/fonts/MaterialIcons-Regular.otf": "1288c9e28052e028aba623321f7826ac",
-"assets/NOTICES": "a4ebacf2d07f08e5383d276fc87e0762",
+"assets/NOTICES": "674a9ed0d1c8cd824d597e7c258a15f7",
 "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "b14fcf3ee94e3ace300b192e9e7c8c5d",
 "assets/packages/font_awesome_flutter/lib/fonts/fa-brands-400.ttf": "831eb40a2d76095849ba4aecd4340f19",
 "assets/packages/font_awesome_flutter/lib/fonts/fa-regular-400.ttf": "a126c025bab9a1b4d8ac5534af76a208",
@@ -15,10 +16,11 @@ const RESOURCES = {
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
-"index.html": "d5cc2dbe4cb5128afa3f62f0d626467e",
-"/": "d5cc2dbe4cb5128afa3f62f0d626467e",
-"main.dart.js": "84e583c6c3a942f917feba46766e1a49",
-"manifest.json": "284f6749270517666e7d5a80b7849220"
+"index.html": "1e814e671554b0b2812897cc5d407e81",
+"/": "1e814e671554b0b2812897cc5d407e81",
+"main.dart.js": "a16f33e82b7cfb9761707e782215a664",
+"manifest.json": "284f6749270517666e7d5a80b7849220",
+"version.json": "49738b231059d905b0f54bc62c753973"
 };
 
 // The application shell files that are downloaded before a service worker can
@@ -32,6 +34,7 @@ const CORE = [
 "assets/FontManifest.json"];
 // During install, the TEMP cache is populated with the application shell files.
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   return event.waitUntil(
     caches.open(TEMP).then((cache) => {
       return cache.addAll(
@@ -100,6 +103,9 @@ self.addEventListener("activate", function(event) {
 // The fetch handler redirects requests for RESOURCE files to the service
 // worker cache.
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
   var origin = self.location.origin;
   var key = event.request.url.substring(origin.length + 1);
   // Redirect URLs to the index.html
@@ -109,9 +115,10 @@ self.addEventListener("fetch", (event) => {
   if (event.request.url == origin || event.request.url.startsWith(origin + '/#') || key == '') {
     key = '/';
   }
-  // If the URL is not the RESOURCE list, skip the cache.
+  // If the URL is not the RESOURCE list then return to signal that the
+  // browser should take over.
   if (!RESOURCES[key]) {
-    return event.respondWith(fetch(event.request));
+    return;
   }
   // If the URL is the index.html, perform an online-first request.
   if (key == '/') {
@@ -135,10 +142,12 @@ self.addEventListener('message', (event) => {
   // SkipWaiting can be used to immediately activate a waiting service worker.
   // This will also require a page refresh triggered by the main worker.
   if (event.data === 'skipWaiting') {
-    return self.skipWaiting();
+    self.skipWaiting();
+    return;
   }
-  if (event.message === 'downloadOffline') {
+  if (event.data === 'downloadOffline') {
     downloadOffline();
+    return;
   }
 });
 
